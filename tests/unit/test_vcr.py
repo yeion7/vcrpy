@@ -1,3 +1,4 @@
+import gc
 import http.client as httplib
 import os
 from pathlib import Path
@@ -404,3 +405,24 @@ def test_use_cassette_generator_return():
         next(gen())
 
     assert exc_info.value.value is ret_val
+
+
+def test_force_reset_does_not_unpatch_a_cassette_opened_during_the_window():
+    """An abandoned window is unwound by the collector, inside a later cassette."""
+    gc.disable()
+    try:
+        cycle = {"window": force_reset()}
+        cycle["self"] = cycle  # only the cyclic collector can free this window
+        cycle["window"].__enter__()
+        del cycle
+
+        with use_cassette(path="test"):
+            patched = httplib.HTTPConnection
+            assert patched is not _HTTPConnection
+            gc.enable()
+            gc.collect()
+            assert httplib.HTTPConnection is patched
+    finally:
+        gc.enable()
+
+    assert httplib.HTTPConnection is _HTTPConnection
