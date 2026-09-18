@@ -579,20 +579,12 @@ def reset_patchers():
         yield mock.patch.object(conn, "VerifiedHTTPSConnection", _VerifiedHTTPSConnection)
         yield mock.patch.object(conn, "HTTPConnection", _connHTTPConnection)
         yield mock.patch.object(conn, "HTTPSConnection", _connHTTPSConnection)
-        if hasattr(cpool.HTTPConnectionPool, "ConnectionCls"):
-            yield mock.patch.object(cpool.HTTPConnectionPool, "ConnectionCls", _connHTTPConnection)
-            yield mock.patch.object(cpool.HTTPSConnectionPool, "ConnectionCls", _connHTTPSConnection)
-
     try:
         # unpatch botocore with awsrequest
         import botocore.awsrequest as cpool
     except ImportError:  # pragma: no cover
         pass
     else:
-        if hasattr(cpool.AWSHTTPConnectionPool, "ConnectionCls"):
-            yield mock.patch.object(cpool.AWSHTTPConnectionPool, "ConnectionCls", _cpoolBoto3HTTPConnection)
-            yield mock.patch.object(cpool.AWSHTTPSConnectionPool, "ConnectionCls", _cpoolBoto3HTTPSConnection)
-
         if hasattr(cpool, "AWSHTTPSConnection"):
             yield mock.patch.object(cpool, "AWSHTTPSConnection", _cpoolBoto3HTTPSConnection)
 
